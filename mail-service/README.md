@@ -1,9 +1,8 @@
 # Introduction
-User service represents user management module in community platform.
+Mail service used to send mail to users in community platform.
 
 ## Protobuf
 ```
-protoc --proto_path=proto --micro_out=proto --go_out=proto proto/user.proto
 protoc --proto_path=proto --micro_out=proto --go_out=proto proto/mail.proto
 ```
 

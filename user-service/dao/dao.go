@@ -3,9 +3,10 @@ package dao
 import (
 	"crypto/md5"
 	"fmt"
+	"time"
 
 	"github.com/jinzhu/gorm"
-	"github.com/x-community/x-community/user-service/models"
+	"github.com/x-community/user-service/models"
 )
 
 var _ UserDao = &userDao{}
@@ -58,4 +59,24 @@ func (d *userDao) EncryptPassword(password, salt string) string {
 
 func (d *userDao) CreateUser(entity *models.User) error {
 	return d.db.Create(entity).Error
+}
+
+func (d *userDao) ActiveUser(code string) error {
+	return d.db.Transaction(func(tx *gorm.DB) error {
+		var entity models.User
+		if err := tx.Where("active_code = ?", code).Find(&entity).Error; err != nil {
+			return err
+		}
+		if !entity.Actived {
+			updates := map[string]interface{}{"actived": true, "actived_at": time.Now().UTC()}
+			if err := tx.Model(entity).Updates(updates).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (d *userDao) IsEntityNotFoundError(err error) bool {
+	return gorm.IsRecordNotFoundError(err)
 }

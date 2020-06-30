@@ -13,7 +13,7 @@ func NewDatabase(config Config) (db *gorm.DB, err error) {
 		return time.Now().UTC()
 	}
 	db, err = gorm.Open("mysql", connectionString(config))
-	if nil == err && config.ShowSQL {
+	if nil == err && config.ShowLog {
 		db.LogMode(true)
 	}
 	return

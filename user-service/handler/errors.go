@@ -13,16 +13,14 @@ var (
 	errUsernameAlreadyRegistered   = errors.Error{Code: 1005, Detail: "Username already registered"}
 	errIncorrectUsernameOrPassword = errors.Error{Code: 1006, Detail: "Username or password is incorrect"}
 	errInvalidOldPassword          = errors.Error{Code: 1007, Detail: "Old password is incorrect"}
+	errAccountNotActived           = errors.Error{Code: 1008, Detail: "Account is not actived"}
+	errInvalidAccessToken          = errors.Error{Code: 1009, Detail: "Invalid access token"}
+	errInvalidActiveCode           = errors.Error{Code: 1010, Detail: "Invalid active code"}
 )
-
-// InvalidAuthenticationCredential represents invalid authentication credential error
-func (s *userService) InvalidAuthenticationCredential(err string) error {
-	return &errors.Error{Id: s.id, Code: 22003, Detail: err}
-}
 
 // InternalServerError represents internal server error
 func (s *userService) InternalServerError(err string) error {
-	return errors.InternalServerError(s.id, err)
+	return &errors.Error{Id: s.id, Code: 1000, Detail: err}
 }
 
 // NewError return a new micro service error

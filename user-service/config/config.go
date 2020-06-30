@@ -4,7 +4,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/x-community/x-community/user-service/database"
+	"github.com/x-community/user-service/database"
+	"github.com/x-community/user-service/handler"
 	"github.com/x-punch/go-config"
 )
 
@@ -15,6 +16,7 @@ type Config struct {
 	Version  string          `toml:"-"`
 	DB       database.Config `toml:"db"`
 	Tracing  TracingConfig   `toml:"tracing"`
+	Handler  handler.Config  `toml:"handler"`
 	Services Services        `toml:"services"`
 }
 
@@ -26,9 +28,7 @@ type TracingConfig struct {
 
 // Services represents third-services
 type Services struct {
-	TokenSecret     string          `toml:"token_secret"`
-	TokenExpiration config.Duration `toml:"token_expiration"`
-	MailService     string          `toml:"mail_service"`
+	MailService string `toml:"mail"`
 }
 
 // Load parse config info from config file and env args
@@ -37,9 +37,9 @@ func Load() (cfg *Config, err error) {
 		Address: ":80",
 		Name:    "user-service",
 		Version: "1.0.0",
-		Services: Services{
+		Handler: handler.Config{
 			TokenExpiration: config.Duration(time.Hour),
-			TokenSecret:     "secret",
+			TokenSecret:     "x-community",
 		},
 		DB: database.NewConfig(),
 	}

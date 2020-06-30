@@ -2,21 +2,33 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"regexp"
+	"strconv"
+	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/matcornic/hermes/v2"
 	log "github.com/micro/go-micro/v2/logger"
-	"github.com/x-community/x-community/user-service/dao"
-	"github.com/x-community/x-community/user-service/models"
-	pb "github.com/x-community/x-community/user-service/proto"
+	"github.com/x-community/user-service/dao"
+	"github.com/x-community/user-service/models"
+	pb "github.com/x-community/user-service/proto"
 	"github.com/x-punch/go-strings"
 )
 
+const (
+	SaltLenght       = 10
+	ActiveCodeLength = 32
+)
+
 type userService struct {
-	id  string
-	dao dao.UserDao
+	id          string
+	cfg         Config
+	dao         dao.UserDao
+	mailService pb.MailService
 }
 
-func (s *userService) Register(ctx context.Context, in *pb.RegisterRequest, out *pb.RegisterResponse) error {
+func (s *userService) Register(ctx context.Context, in *pb.RegisterRequest, out *pb.RegisterReply) error {
 	if len(in.Email) == 0 || len(in.Email) > 256 || !regexp.MustCompile(`\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*`).MatchString(in.Email) {
 		return s.NewError(errInvalidEmail)
 	}
@@ -32,26 +44,31 @@ func (s *userService) Register(ctx context.Context, in *pb.RegisterRequest, out 
 	} else if exists {
 		return s.NewError(errEmailAlreadyRegistered)
 	}
-	if exists, err := s.dao.IsUsernameExists(in.Email); err != nil {
+	if exists, err := s.dao.IsUsernameExists(in.Username); err != nil {
 		log.Error(err)
 		return s.InternalServerError(err.Error())
 	} else if exists {
 		return s.NewError(errUsernameAlreadyRegistered)
 	}
-	salt := strings.GetRandomString(10)
+	salt := strings.GetRandomString(SaltLenght)
 	user := &models.User{
-		Email:    in.Email,
-		Username: in.Username,
-		Salt:     salt,
-		Password: s.dao.EncryptPassword(in.Password, salt),
+		Email:      in.Email,
+		Username:   in.Username,
+		Salt:       salt,
+		Password:   s.dao.EncryptPassword(in.Password, salt),
+		Actived:    false,
+		ActiveCode: strings.GetRandomString(ActiveCodeLength),
 	}
 	if err := s.dao.CreateUser(user); err != nil {
+		return s.InternalServerError(err.Error())
+	}
+	if err := s.sendActivationEmail(user); err != nil {
 		return s.InternalServerError(err.Error())
 	}
 	return nil
 }
 
-func (s *userService) Authenticate(ctx context.Context, in *pb.AuthenticateRequest, out *pb.AuthenticateResponse) error {
+func (s *userService) Authenticate(ctx context.Context, in *pb.AuthenticateRequest, out *pb.AuthenticateReply) error {
 	if len(in.EmailOrUsername) == 0 || len(in.Password) == 0 {
 		return s.NewError(errIncorrectUsernameOrPassword)
 	}
@@ -73,5 +90,84 @@ func (s *userService) Authenticate(ctx context.Context, in *pb.AuthenticateReque
 	if user.Password != s.dao.EncryptPassword(in.Password, user.Salt) {
 		return s.NewError(errIncorrectUsernameOrPassword)
 	}
+	if !user.Actived {
+		return s.NewError(errAccountNotActived)
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Id:        strconv.FormatUint(uint64(user.ID), 10),
+		ExpiresAt: time.Now().Add(time.Duration(s.cfg.TokenExpiration)).Unix(),
+		Issuer:    "X Community",
+	})
+	out.Token, err = token.SignedString([]byte(s.cfg.TokenSecret))
+	if err != nil {
+		return s.InternalServerError(err.Error())
+	}
 	return nil
+}
+
+func (s *userService) VerifyAccount(ctx context.Context, in *pb.VerifyAccountRequest, out *pb.VerifyAccountReply) error {
+	if len(in.Code) == 0 {
+		return s.NewError(errInvalidActiveCode)
+	}
+	if err := s.dao.ActiveUser(in.Code); err != nil {
+		if s.dao.IsEntityNotFoundError(err) {
+			return s.NewError(errInvalidActiveCode)
+		}
+		return s.InternalServerError(err.Error())
+	}
+	return nil
+}
+
+func (s *userService) VerifyToken(ctx context.Context, in *pb.VerifyTokenRequest, out *pb.VerifyTokenReply) error {
+	if len(in.Token) == 0 {
+		return s.NewError(errInvalidAccessToken)
+	}
+	var claims jwt.StandardClaims
+	token, err := jwt.ParseWithClaims(in.Token, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(s.cfg.TokenSecret), nil
+	})
+	if err != nil {
+		return s.InternalServerError(err.Error())
+	}
+	if !token.Valid {
+		return s.NewError(errInvalidAccessToken)
+	}
+	uid, err := strconv.ParseUint(claims.Id, 10, 0)
+	if err != nil {
+		return s.NewError(errInvalidAccessToken)
+	}
+	out.UserId = uint32(uid)
+	return nil
+}
+
+func (s *userService) sendActivationEmail(user *models.User) error {
+	h := hermes.Hermes{
+		Product: hermes.Product{
+			Name:      "X Community",
+			Link:      s.cfg.SiteURL,
+			Copyright: fmt.Sprintf("Copyright © %d X Community. All rights reserved.", time.Now().UTC().Year()),
+		},
+	}
+	email := hermes.Email{
+		Body: hermes.Body{
+			Name:   user.Username,
+			Intros: []string{"Welcome to X Community!", "We're very excited to have you on board."},
+			Actions: []hermes.Action{{
+				Instructions: "To get started with X Community, please click here:",
+				Button: hermes.Button{
+					Color: "#22BC66",
+					Text:  "Confirm your account",
+					Link:  s.cfg.SiteURL + "/active/" + user.ActiveCode,
+				},
+			}},
+		},
+	}
+	subject := "Welcome to X Community"
+	content, err := h.GenerateHTML(email)
+	if err != nil {
+		return err
+	}
+	_, err = s.mailService.SendMail(context.Background(), &pb.SendMailRequest{Receiver: user.Username, Address: user.Email, Subject: subject, Content: content})
+	log.Infof("yyyyyyyyyyyyyyy: %v", err)
+	return err
 }

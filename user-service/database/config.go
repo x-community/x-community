@@ -10,7 +10,7 @@ type Config struct {
 	Password           string `toml:"password"`
 	MaxIdleConnections int    `toml:"max_idle"`
 	MaxOpenConnections int    `toml:"max_open"`
-	ShowSQL            bool   `toml:"show_sql"`
+	ShowLog            bool   `toml:"show_log"`
 }
 
 // NewConfig builds a new configuration with default values.
@@ -21,6 +21,6 @@ func NewConfig() Config {
 		Charset:            "utf8",
 		MaxIdleConnections: 5,
 		MaxOpenConnections: 10,
-		ShowSQL:            false,
+		ShowLog:            false,
 	}
 }
