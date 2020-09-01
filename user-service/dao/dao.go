@@ -80,3 +80,51 @@ func (d *userDao) ActiveUser(code string) error {
 func (d *userDao) IsEntityNotFoundError(err error) bool {
 	return gorm.IsRecordNotFoundError(err)
 }
+
+func (d *userDao) FellowUser(userID, fellowUserID uint32) error {
+	if userID == fellowUserID {
+		return nil
+	}
+	sql := "INSERT INTO `user_relation` (`user_id`, `fellow_user_id`, `created_at`) VALUES (?,?,?) ON DUPLICATE KEY UPDATE created_at = VALUES(created_at);"
+	if err := d.db.Exec(sql, userID, fellowUserID, time.Now()).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *userDao) GetFellowUserCount(userID uint32) (uint32, error) {
+	var count uint32
+	if err := d.db.Model(models.UserRelation{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (d *userDao) GetFellowerCount(userID uint32) (uint32, error) {
+	var count uint32
+	if err := d.db.Model(models.UserRelation{}).Where("fellow_user_id = ?", userID).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (d *userDao) GetFellowUsers(userID uint32, skip uint32, limit uint32) ([]uint32, error) {
+	total, err := d.GetFellowUserCount(userID)
+	if err != nil {
+		return nil, err
+	}
+	type fellowUser struct {
+		Username  string
+		CreatedAt time.Time
+	}
+	fellowUsers
+	sql := "SELECT u.username, r.created_at FROM `user` as u JOIN `user_relation` as r ON u.id = r.fellow_user_id WHERE u.id = ?;"
+	if err := d.db.Exec(sql, userID).Scan().Error; err != nil {
+
+	}
+	return nil, nil
+}
+
+func (d *userDao) GetFellowerIDs(uint32, uint32, uint32) ([]uint32, error) {
+	return nil, nil
+}

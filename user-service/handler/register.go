@@ -23,5 +23,9 @@ func Register(s server.Server, opts Options) error {
 	if err != nil {
 		return err
 	}
+	err = pb.RegisterUserRelationServiceHandler(s, userService)
+	if err != nil {
+		return err
+	}
 	return nil
 }

@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+// User represents user
 type User struct {
 	ID            uint32 `gorm:"primary_key"`
 	Username      string `gorm:"type:varchar(32);unique_index"`
@@ -19,5 +20,5 @@ type User struct {
 
 // TableName represents database table name
 func (User) TableName() string {
-	return "users"
+	return "user"
 }

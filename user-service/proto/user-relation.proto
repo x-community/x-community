@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option go_package = ".;community";
+
+service UserRelationService {
+  rpc FellowUser(FellowUserRequest) returns (FellowUserReply) {}
+  rpc GetFellowCount(GetFellowCountRequest) returns (GetFellowCountReply) {}
+  rpc GetFellowers(GetFellowersRequest) returns (GetFellowersReply) {}
+  rpc GetFellowedUsers(GetFellowedUsersRequest) returns (GetFellowedUsersReply) {}
+}
+
+message FellowUserRequest {
+  uint32 user_id = 1;
+  uint32 fellow_user_id = 2;
+}
+
+message FellowUserReply {}
+
+message GetFellowCountRequest { uint32 user_id = 1; }
+
+message GetFellowCountReply {
+  uint32 fellow_count = 1;
+  uint32 fellower_count = 2;
+}
+
+message FellowUserInfo {
+  uint32 id = 1;
+  string username = 2;
+}
+
+message GetFellowersRequest {
+  uint32 user_id = 1;
+  uint32 skip = 2;
+  uint32 limit = 3;
+}
+
+message GetFellowersReply {
+  uint32 total = 1;
+  repeated FellowUserInfo data = 2;
+}
+
+message GetFellowedUsersRequest {
+  uint32 user_id = 1;
+  uint32 skip = 2;
+  uint32 limit = 3;
+}
+
+message GetFellowedUsersReply {}

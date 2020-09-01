@@ -13,6 +13,7 @@ export class UserRegisterComponent implements OnDestroy {
   constructor(fb: FormBuilder, private router: Router, public http: _HttpClient, public msg: NzMessageService) {
     this.form = fb.group({
       mail: [null, [Validators.required, Validators.email]],
+      username: [null, [Validators.required, Validators.email]],
       password: [null, [Validators.required, Validators.minLength(6), UserRegisterComponent.checkPassword.bind(this)]],
       confirm: [null, [Validators.required, Validators.minLength(6), UserRegisterComponent.passwordEquar]],
       mobilePrefix: ['+86'],
@@ -25,6 +26,9 @@ export class UserRegisterComponent implements OnDestroy {
 
   get mail() {
     return this.form.controls.mail;
+  }
+  get username() {
+    return this.form.controls.username;
   }
   get password() {
     return this.form.controls.password;

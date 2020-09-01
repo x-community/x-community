@@ -1,3 +1,11 @@
+<p align="center">
+  <a href="https://ng-alain.com">
+    <img width="100" src="https://ng-alain.com/assets/img/logo-color.svg">
+  </a>
+</p>
+
+<h1 align="center">X Community</h1>
+
 # X Community
 Social network community written in go.
 

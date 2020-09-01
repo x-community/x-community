@@ -3,8 +3,9 @@ User service represents user management module in community platform.
 
 ## Protobuf
 ```
-protoc --proto_path=proto --micro_out=proto --go_out=proto proto/user.proto
 protoc --proto_path=proto --micro_out=proto --go_out=proto proto/mail.proto
+protoc --proto_path=proto --micro_out=proto --go_out=proto proto/user.proto
+protoc --proto_path=proto --micro_out=proto --go_out=proto proto/user-relation.proto
 ```
 
 ## Configuration

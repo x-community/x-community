@@ -15,6 +15,12 @@ type UserDao interface {
 	FindUserByEmail(string) (*models.User, error)
 	FindUserByUsername(string) (*models.User, error)
 	IsEntityNotFoundError(error) bool
+
+	FellowUser(uint32, uint32) error
+	GetFellowUserCount(uint32) (uint32, error)
+	GetFellowerCount(uint32) (uint32, error)
+	GetFellowUserIDs(uint32, uint32, uint32) ([]uint32, error)
+	GetFellowerIDs(uint32, uint32, uint32) ([]uint32, error)
 }
 
 func NewUserDao(db *gorm.DB) UserDao {

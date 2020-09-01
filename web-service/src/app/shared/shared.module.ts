@@ -14,6 +14,7 @@ import { SHARED_ZORRO_MODULES } from './shared-zorro.module';
 import { CountdownModule } from 'ngx-countdown';
 import { NgxTinymceModule } from 'ngx-tinymce';
 import { UEditorModule } from 'ngx-ueditor';
+import { ServiceProxyModule } from './service-proxies/service-proxy.module';
 
 const THIRDMODULES = [CountdownModule, UEditorModule, NgxTinymceModule];
 // #endregion
@@ -36,6 +37,7 @@ const DIRECTIVES = [];
     ...SHARED_ZORRO_MODULES,
     // third libs
     ...THIRDMODULES,
+    ServiceProxyModule,
   ],
   declarations: [
     // your components
@@ -58,6 +60,7 @@ const DIRECTIVES = [];
     // your components
     ...COMPONENTS,
     ...DIRECTIVES,
+    ServiceProxyModule,
   ],
 })
-export class SharedModule {}
+export class SharedModule { }

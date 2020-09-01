@@ -20,7 +20,7 @@ func main() {
 		log.Fatal(err)
 	}
 	db, err := database.NewDatabase(cfg.DB)
-	db.AutoMigrate(models.User{})
+	db.AutoMigrate(models.User{}, models.UserRelation{})
 	opts := []micro.Option{micro.Name(cfg.Name), micro.Address(cfg.Address), micro.Version(cfg.Version)}
 	if cfg.Tracing.Enable {
 		cfg := jaegercfg.Configuration{

@@ -17,7 +17,9 @@ import (
 )
 
 const (
-	SaltLenght       = 10
+	// SaltLength represents salt max length in dataase
+	SaltLength = 10
+	// ActiveCodeLength represents active code max length in dataase
 	ActiveCodeLength = 32
 )
 
@@ -50,7 +52,7 @@ func (s *userService) Register(ctx context.Context, in *pb.RegisterRequest, out 
 	} else if exists {
 		return s.NewError(errUsernameAlreadyRegistered)
 	}
-	salt := strings.GetRandomString(SaltLenght)
+	salt := strings.GetRandomString(SaltLength)
 	user := &models.User{
 		Email:      in.Email,
 		Username:   in.Username,
@@ -69,23 +71,13 @@ func (s *userService) Register(ctx context.Context, in *pb.RegisterRequest, out 
 }
 
 func (s *userService) Authenticate(ctx context.Context, in *pb.AuthenticateRequest, out *pb.AuthenticateReply) error {
-	if len(in.EmailOrUsername) == 0 || len(in.Password) == 0 {
+	if len(in.Email) == 0 || len(in.Password) == 0 {
 		return s.NewError(errIncorrectUsernameOrPassword)
 	}
-	user, err := s.dao.FindUserByEmail(in.EmailOrUsername)
+	user, err := s.dao.FindUserByEmail(in.Email)
 	if err != nil {
 		log.Error(err)
 		return s.InternalServerError(err.Error())
-	}
-	if user == nil {
-		user, err = s.dao.FindUserByUsername(in.EmailOrUsername)
-		if err != nil {
-			log.Error(err)
-			return s.InternalServerError(err.Error())
-		}
-		if user == nil {
-			return s.NewError(errIncorrectUsernameOrPassword)
-		}
 	}
 	if user.Password != s.dao.EncryptPassword(in.Password, user.Salt) {
 		return s.NewError(errIncorrectUsernameOrPassword)
@@ -140,6 +132,44 @@ func (s *userService) VerifyToken(ctx context.Context, in *pb.VerifyTokenRequest
 	return nil
 }
 
+func (s *userService) FellowUser(ctx context.Context, in *pb.FellowUserRequest, out *pb.FellowUserReply) error {
+	if err := s.dao.FellowUser(in.UserId, in.FellowUserId); err != nil {
+		return s.InternalServerError(err.Error())
+	}
+	return nil
+}
+
+func (s *userService) GetFellowCount(ctx context.Context, in *pb.GetFellowCountRequest, out *pb.GetFellowCountReply) error {
+	fellowCount, err := s.dao.GetFellowUserCount(in.UserId)
+	if err != nil {
+		log.Error(err)
+		return s.InternalServerError(err.Error())
+	}
+	fellowerCount, err := s.dao.GetFellowerCount(in.UserId)
+	if err != nil {
+		log.Error(err)
+		return s.InternalServerError(err.Error())
+	}
+	out.FellowCount = fellowCount
+	out.FellowerCount = fellowerCount
+	return nil
+}
+
+func (s *userService) GetFellowers(ctx context.Context, in *pb.GetFellowersRequest, out *pb.GetFellowersReply) error {
+	total, err := s.dao.GetFellowerCount(in.UserId)
+	if err != nil {
+		log.Error(err)
+		return s.InternalServerError(err.Error())
+	}
+	out.Total = total
+
+	return nil
+}
+
+func (s *userService) GetFellowedUsers(ctx context.Context, in *pb.GetFellowedUsersRequest, out *pb.GetFellowedUsersReply) error {
+	return nil
+}
+
 func (s *userService) sendActivationEmail(user *models.User) error {
 	h := hermes.Hermes{
 		Product: hermes.Product{
@@ -168,6 +198,5 @@ func (s *userService) sendActivationEmail(user *models.User) error {
 		return err
 	}
 	_, err = s.mailService.SendMail(context.Background(), &pb.SendMailRequest{Receiver: user.Username, Address: user.Email, Subject: subject, Content: content})
-	log.Infof("yyyyyyyyyyyyyyy: %v", err)
 	return err
 }

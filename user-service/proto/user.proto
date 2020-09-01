@@ -17,14 +17,12 @@ message RegisterRequest {
 
 message RegisterReply {}
 
-message VerifyAccountRequest {
-  string code = 1;
-}
+message VerifyAccountRequest { string code = 1; }
 
 message VerifyAccountReply {}
 
 message AuthenticateRequest {
-  string emailOrUsername = 1;
+  string email = 1;
   string password = 2;
 }
 
