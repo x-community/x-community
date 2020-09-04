@@ -27,7 +27,7 @@ func Load() (cfg *Config, err error) {
 	cfg = &Config{
 		Address: ":80",
 		Name:    "mail-service",
-		Version: "0.0.0",
+		Version: "0.0.1",
 	}
 	if _, err := os.Stat("config.toml"); err == nil {
 		err = config.Load(cfg, "config.toml")

@@ -33,7 +33,7 @@ func Load() (cfg *Config, err error) {
 	cfg = &Config{
 		Address: ":80",
 		Name:    "api-service",
-		Version: "0.0.0",
+		Version: "0.0.1",
 		API:     controller.NewConfig(),
 	}
 	if _, err := os.Stat("config.toml"); err == nil {

@@ -19,7 +19,11 @@ message RegisterReply {}
 
 message VerifyAccountRequest { string code = 1; }
 
-message VerifyAccountReply {}
+message VerifyAccountReply {
+  bool success = 1;
+  uint32 code = 2;
+  string message = 3;
+}
 
 message AuthenticateRequest {
   string email = 1;

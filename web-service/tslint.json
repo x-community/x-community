@@ -26,13 +26,13 @@
     "directive-selector": [
       true,
       "attribute",
-      ["app", "passport", "exception", "layout", "header"],
+      ["app", "account", "exception", "layout", "header"],
       "camelCase"
     ],
     "component-selector": [
       true,
       "element",
-      ["app", "passport", "exception", "layout", "header"],
+      ["app", "account", "exception", "layout", "header"],
       "kebab-case"
     ],
     "eofline": true,

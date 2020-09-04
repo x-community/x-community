@@ -4,15 +4,15 @@
 /dist
 /tmp
 /out-tsc
-/src/assets/alain-*.less
-delon-builds
-scripts/var.less
-src/assets/style.dark.css
-src/assets/style.compact.css
+# Only exists if Bazel was run
+/bazel-out
 
 # dependencies
 /node_modules
-/yarn.lock
+
+# profiling files
+chrome-profiler-events*.json
+speed-measure-plugin*.json
 
 # IDEs and editors
 /.idea
@@ -29,6 +29,7 @@ src/assets/style.compact.css
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.history/*
 
 # misc
 /.sass-cache
@@ -36,13 +37,9 @@ src/assets/style.compact.css
 /coverage
 /libpeerconnection.log
 npm-debug.log
+yarn-error.log
 testem.log
 /typings
-yarn-error.log
-/_all.less
-
-# e2e
-/e2e/*.map
 
 # System Files
 .DS_Store

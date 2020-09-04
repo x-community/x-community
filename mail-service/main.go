@@ -4,7 +4,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
-	jaeger "github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"github.com/x-community/mail-service/config"
 	"github.com/x-community/mail-service/handler"
@@ -18,12 +17,10 @@ func main() {
 	}
 	opts := []micro.Option{micro.Name(cfg.Name), micro.Address(cfg.Address), micro.Version(cfg.Version)}
 	if cfg.Tracing.Enable {
-		cfg := jaegercfg.Configuration{
+		tracer, closer, err := jaegercfg.Configuration{
 			ServiceName: cfg.Name,
-			Sampler:     &jaegercfg.SamplerConfig{Type: jaeger.SamplerTypeConst, Param: 1},
 			Reporter:    &jaegercfg.ReporterConfig{LogSpans: true, CollectorEndpoint: cfg.Tracing.Collector},
-		}
-		tracer, closer, err := cfg.NewTracer()
+		}.NewTracer()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -31,6 +28,7 @@ func main() {
 		opts = append(opts, micro.WrapHandler(tracing.NewHandlerWrapper(tracer)))
 	}
 	service := micro.NewService(opts...)
+	service.Init()
 	if err := handler.Register(service.Server(), handler.Options{ServiceName: cfg.Name, Config: cfg.Handler}); err != nil {
 		log.Fatal(err)
 	}

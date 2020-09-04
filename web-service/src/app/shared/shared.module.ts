@@ -7,21 +7,21 @@ import { DelonFormModule } from '@delon/form';
 import { AlainThemeModule } from '@delon/theme';
 import { TranslateModule } from '@ngx-translate/core';
 
+import { ServiceProxyModule } from '@shared/service-proxies/service-proxy.module';
 import { SHARED_DELON_MODULES } from './shared-delon.module';
 import { SHARED_ZORRO_MODULES } from './shared-zorro.module';
 
 // #region third libs
-import { CountdownModule } from 'ngx-countdown';
-import { NgxTinymceModule } from 'ngx-tinymce';
-import { UEditorModule } from 'ngx-ueditor';
-import { ServiceProxyModule } from './service-proxies/service-proxy.module';
 
-const THIRDMODULES = [CountdownModule, UEditorModule, NgxTinymceModule];
+const THIRDMODULES = [ServiceProxyModule];
+
 // #endregion
 
 // #region your componets & directives
+
 const COMPONENTS = [];
 const DIRECTIVES = [];
+
 // #endregion
 
 @NgModule({
@@ -36,13 +36,12 @@ const DIRECTIVES = [];
     ...SHARED_DELON_MODULES,
     ...SHARED_ZORRO_MODULES,
     // third libs
-    ...THIRDMODULES,
-    ServiceProxyModule,
+    ...THIRDMODULES
   ],
   declarations: [
     // your components
     ...COMPONENTS,
-    ...DIRECTIVES,
+    ...DIRECTIVES
   ],
   exports: [
     CommonModule,
@@ -59,8 +58,7 @@ const DIRECTIVES = [];
     ...THIRDMODULES,
     // your components
     ...COMPONENTS,
-    ...DIRECTIVES,
-    ServiceProxyModule,
-  ],
+    ...DIRECTIVES
+  ]
 })
 export class SharedModule { }

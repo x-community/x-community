@@ -5,7 +5,6 @@ import (
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
 	"github.com/micro/go-micro/v2/web"
-	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"github.com/x-community/api-service/config"
 	"github.com/x-community/api-service/controller"
@@ -35,18 +34,7 @@ func main() {
 		web.Handler(api)}
 	microOpts := []micro.Option{}
 	if cfg.Tracing.Enable {
-		jc := jaegercfg.Configuration{
-			ServiceName: cfg.Name,
-			Sampler: &jaegercfg.SamplerConfig{
-				Type:  jaeger.SamplerTypeConst,
-				Param: 1,
-			},
-			Reporter: &jaegercfg.ReporterConfig{
-				LogSpans:          true,
-				CollectorEndpoint: cfg.Tracing.Collector,
-			},
-		}
-		tracer, closer, err := jc.NewTracer()
+		tracer, closer, err := jaegercfg.Configuration{ServiceName: cfg.Name, Reporter: &jaegercfg.ReporterConfig{LogSpans: true, CollectorEndpoint: cfg.Tracing.Collector}}.NewTracer()
 		if err != nil {
 			log.Fatal(err)
 		}

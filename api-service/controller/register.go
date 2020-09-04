@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	"github.com/x-community/api-service/controller/user"
+	"github.com/x-community/api-service/controller/account"
 	"github.com/x-community/api-service/docs"
 	pb "github.com/x-community/api-service/proto"
 )
@@ -25,11 +25,11 @@ func Register(opts Options) error {
 	router := opts.Router
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	userService := user.NewService(opts.UserService)
+	accountService := account.NewService(opts.UserService)
 	{
-		router.POST("/account/register", userService.Register)
-		router.POST("/account/verify", userService.VerifyAccount)
-		router.POST("/account/login", userService.Login)
+		router.POST("/account/register", accountService.Register)
+		router.POST("/account/verify", accountService.VerifyAccount)
+		router.POST("/account/login", accountService.Login)
 	}
 	return nil
 }

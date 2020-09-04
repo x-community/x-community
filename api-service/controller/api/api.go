@@ -93,7 +93,7 @@ func (s *APIService) Error(ctx *gin.Context, err error) {
 		return
 	}
 	var merr *merrors.Error
-	if errors.As(err, &merr) && merr.Code != 500 {
+	if errors.As(err, &merr) && merr.Code != 408 && merr.Code != 500 && merr.Code != 1000 {
 		s.BadRequest(ctx, APIError{Code: merr.Code, Message: merr.Detail})
 	} else {
 		ctx.Error(err)

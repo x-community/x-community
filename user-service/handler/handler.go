@@ -14,6 +14,7 @@ import (
 	"github.com/x-community/user-service/models"
 	pb "github.com/x-community/user-service/proto"
 	"github.com/x-punch/go-strings"
+	"gorm.io/gorm"
 )
 
 const (
@@ -40,13 +41,13 @@ func (s *userService) Register(ctx context.Context, in *pb.RegisterRequest, out 
 	if len(in.Password) < 8 || !regexp.MustCompile("^([A-Z]|[a-z]|[0-9]|[`~!@#$%^&*()-_+=|{}':;\\\\[\\]<>,./?]){8,}$").MatchString(in.Password) {
 		return s.NewError(errInvalidPassword)
 	}
-	if exists, err := s.dao.IsEmailExists(in.Email); err != nil {
+	if exists, err := s.dao.IsEmailExists(ctx, in.Email); err != nil {
 		log.Error(err)
 		return s.InternalServerError(err.Error())
 	} else if exists {
 		return s.NewError(errEmailAlreadyRegistered)
 	}
-	if exists, err := s.dao.IsUsernameExists(in.Username); err != nil {
+	if exists, err := s.dao.IsUsernameExists(ctx, in.Username); err != nil {
 		log.Error(err)
 		return s.InternalServerError(err.Error())
 	} else if exists {
@@ -57,14 +58,16 @@ func (s *userService) Register(ctx context.Context, in *pb.RegisterRequest, out 
 		Email:      in.Email,
 		Username:   in.Username,
 		Salt:       salt,
-		Password:   s.dao.EncryptPassword(in.Password, salt),
+		Password:   s.dao.EncryptPassword(ctx, in.Password, salt),
 		Actived:    false,
 		ActiveCode: strings.GetRandomString(ActiveCodeLength),
 	}
-	if err := s.dao.CreateUser(user); err != nil {
-		return s.InternalServerError(err.Error())
-	}
-	if err := s.sendActivationEmail(user); err != nil {
+	if err := s.dao.Transaction(func(tx *gorm.DB) error {
+		if err := s.dao.CreateUser(ctx, tx, user); err != nil {
+			return err
+		}
+		return s.sendActivationEmail(user)
+	}); err != nil {
 		return s.InternalServerError(err.Error())
 	}
 	return nil
@@ -74,12 +77,12 @@ func (s *userService) Authenticate(ctx context.Context, in *pb.AuthenticateReque
 	if len(in.Email) == 0 || len(in.Password) == 0 {
 		return s.NewError(errIncorrectUsernameOrPassword)
 	}
-	user, err := s.dao.FindUserByEmail(in.Email)
+	user, err := s.dao.FindUserByEmail(ctx, in.Email)
 	if err != nil {
 		log.Error(err)
 		return s.InternalServerError(err.Error())
 	}
-	if user.Password != s.dao.EncryptPassword(in.Password, user.Salt) {
+	if user.Password != s.dao.EncryptPassword(ctx, in.Password, user.Salt) {
 		return s.NewError(errIncorrectUsernameOrPassword)
 	}
 	if !user.Actived {
@@ -101,7 +104,9 @@ func (s *userService) VerifyAccount(ctx context.Context, in *pb.VerifyAccountReq
 	if len(in.Code) == 0 {
 		return s.NewError(errInvalidActiveCode)
 	}
-	if err := s.dao.ActiveUser(in.Code); err != nil {
+	if err := s.dao.Transaction(func(tx *gorm.DB) error {
+		return s.dao.ActiveUser(ctx, tx, in.Code)
+	}); err != nil {
 		if s.dao.IsEntityNotFoundError(err) {
 			return s.NewError(errInvalidActiveCode)
 		}
@@ -133,19 +138,19 @@ func (s *userService) VerifyToken(ctx context.Context, in *pb.VerifyTokenRequest
 }
 
 func (s *userService) FellowUser(ctx context.Context, in *pb.FellowUserRequest, out *pb.FellowUserReply) error {
-	if err := s.dao.FellowUser(in.UserId, in.FellowUserId); err != nil {
+	if err := s.dao.FellowUser(ctx, in.UserId, in.FellowUserId); err != nil {
 		return s.InternalServerError(err.Error())
 	}
 	return nil
 }
 
 func (s *userService) GetFellowCount(ctx context.Context, in *pb.GetFellowCountRequest, out *pb.GetFellowCountReply) error {
-	fellowCount, err := s.dao.GetFellowUserCount(in.UserId)
+	fellowCount, err := s.dao.GetFellowUserCount(ctx, in.UserId)
 	if err != nil {
 		log.Error(err)
 		return s.InternalServerError(err.Error())
 	}
-	fellowerCount, err := s.dao.GetFellowerCount(in.UserId)
+	fellowerCount, err := s.dao.GetFellowerCount(ctx, in.UserId)
 	if err != nil {
 		log.Error(err)
 		return s.InternalServerError(err.Error())
@@ -156,7 +161,7 @@ func (s *userService) GetFellowCount(ctx context.Context, in *pb.GetFellowCountR
 }
 
 func (s *userService) GetFellowers(ctx context.Context, in *pb.GetFellowersRequest, out *pb.GetFellowersReply) error {
-	total, err := s.dao.GetFellowerCount(in.UserId)
+	total, err := s.dao.GetFellowerCount(ctx, in.UserId)
 	if err != nil {
 		log.Error(err)
 		return s.InternalServerError(err.Error())
@@ -187,7 +192,7 @@ func (s *userService) sendActivationEmail(user *models.User) error {
 				Button: hermes.Button{
 					Color: "#22BC66",
 					Text:  "Confirm your account",
-					Link:  s.cfg.SiteURL + "/active/" + user.ActiveCode,
+					Link:  s.cfg.SiteURL + "/#/account/active?code=" + user.ActiveCode,
 				},
 			}},
 		},

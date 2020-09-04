@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/micro/go-micro/v2"
 	log "github.com/micro/go-micro/v2/logger"
 	jaeger "github.com/uber/jaeger-client-go"
@@ -9,7 +8,6 @@ import (
 	"github.com/x-community/user-service/config"
 	"github.com/x-community/user-service/database"
 	"github.com/x-community/user-service/handler"
-	"github.com/x-community/user-service/models"
 	pb "github.com/x-community/user-service/proto"
 	tracing "github.com/x-punch/micro-opentracing/v2"
 )
@@ -20,7 +18,6 @@ func main() {
 		log.Fatal(err)
 	}
 	db, err := database.NewDatabase(cfg.DB)
-	db.AutoMigrate(models.User{}, models.UserRelation{})
 	opts := []micro.Option{micro.Name(cfg.Name), micro.Address(cfg.Address), micro.Version(cfg.Version)}
 	if cfg.Tracing.Enable {
 		cfg := jaegercfg.Configuration{

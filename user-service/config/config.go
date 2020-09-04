@@ -36,7 +36,7 @@ func Load() (cfg *Config, err error) {
 	cfg = &Config{
 		Address: ":80",
 		Name:    "user-service",
-		Version: "1.0.0",
+		Version: "0.0.1",
 		Handler: handler.Config{
 			TokenExpiration: config.Duration(time.Hour),
 			TokenSecret:     "x-community",

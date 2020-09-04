@@ -1,4 +1,5 @@
 // 请参考：https://ng-alain.com/docs/i18n
+import { Platform } from '@angular/cdk/platform';
 import { registerLocaleData } from '@angular/common';
 import ngEn from '@angular/common/locales/en';
 import ngZh from '@angular/common/locales/zh';
@@ -14,17 +15,18 @@ import {
 } from '@delon/theme';
 import { TranslateService } from '@ngx-translate/core';
 import { enUS as dfEn, zhCN as dfZhCn, zhTW as dfZhTw } from 'date-fns/locale';
+import { NzSafeAny } from 'ng-zorro-antd/core/types';
 import { en_US as zorroEnUS, NzI18nService, zh_CN as zorroZhCN, zh_TW as zorroZhTW } from 'ng-zorro-antd/i18n';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 interface LangData {
-  text: string;
-  ng: any;
-  zorro: any;
-  date: any;
-  delon: any;
   abbr: string;
+  text: string;
+  ng: NzSafeAny;
+  zorro: NzSafeAny;
+  date: NzSafeAny;
+  delon: NzSafeAny;
 }
 
 const DEFAULT = 'zh-CN';
@@ -70,6 +72,7 @@ export class I18NService implements AlainI18NService {
     private nzI18nService: NzI18nService,
     private delonLocaleService: DelonLocaleService,
     private translate: TranslateService,
+    private platform: Platform,
   ) {
     // `@ngx-translate/core` 预先知道支持哪些语言
     const lans = this._langs.map((item) => item.code);
@@ -84,6 +87,9 @@ export class I18NService implements AlainI18NService {
   }
 
   private getDefaultLang(): string | undefined {
+    if (!this.platform.isBrowser) {
+      return DEFAULT;
+    }
     if (this.settings.layout.lang) {
       return this.settings.layout.lang;
     }

@@ -1,38 +1,34 @@
 import { NgModule } from '@angular/core';
 
 import { SharedModule } from '@shared';
-import { CallbackComponent } from './callback/callback.component';
-import { DashboardAnalysisComponent } from './dashboard/analysis/analysis.component';
-import { DashboardMonitorComponent } from './dashboard/monitor/monitor.component';
-// dashboard pages
-import { DashboardV1Component } from './dashboard/v1/v1.component';
-import { DashboardWorkplaceComponent } from './dashboard/workplace/workplace.component';
+import { UserActiveComponent } from './account/active/active.component';
+// account pages
+import { UserLoginComponent } from './account/login/login.component';
+import { UserRegisterResultComponent } from './account/register-result/register-result.component';
+import { UserRegisterComponent } from './account/register/register.component';
 // single pages
-import { UserLockComponent } from './passport/lock/lock.component';
-// passport pages
-import { UserLoginComponent } from './passport/login/login.component';
-import { UserRegisterResultComponent } from './passport/register-result/register-result.component';
-import { UserRegisterComponent } from './passport/register/register.component';
+import { CallbackComponent } from './callback/callback.component';
+// dashboard pages
+import { DashboardComponent } from './dashboard/dashboard.component';
 import { RouteRoutingModule } from './routes-routing.module';
 
 const COMPONENTS = [
-  DashboardV1Component,
-  DashboardAnalysisComponent,
-  DashboardMonitorComponent,
-  DashboardWorkplaceComponent,
-  // passport pages
+  DashboardComponent,
+  // account pages
   UserLoginComponent,
   UserRegisterComponent,
   UserRegisterResultComponent,
+  UserActiveComponent,
   // single pages
-  UserLockComponent,
   CallbackComponent,
 ];
 const COMPONENTS_NOROUNT = [];
 
 @NgModule({
-  imports: [SharedModule, RouteRoutingModule],
-  declarations: [...COMPONENTS, ...COMPONENTS_NOROUNT],
-  entryComponents: COMPONENTS_NOROUNT,
+  imports: [ SharedModule, RouteRoutingModule ],
+  declarations: [
+    ...COMPONENTS,
+    ...COMPONENTS_NOROUNT
+  ],
 })
 export class RoutesModule {}

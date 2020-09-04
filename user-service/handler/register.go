@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/micro/go-micro/v2/server"
 	"github.com/x-community/user-service/dao"
 	pb "github.com/x-community/user-service/proto"
